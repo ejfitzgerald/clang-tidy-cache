@@ -163,7 +163,7 @@ func main() {
 	args := os.Args[1:]
 
 	// handle version
-	if len(args) == 1 && (args[0] == "version" || args[0] == "-v" || args[0] == "--version") {
+	if len(args) == 1 && args[0] == "version" {
 		fmt.Printf("clang-tidy-cache %s\n", VERSION)
 		os.Exit(1)
 	}
