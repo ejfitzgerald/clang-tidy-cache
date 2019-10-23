@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/ejfitzgerald/clang-tidy-cache/caches"
 	"github.com/ejfitzgerald/clang-tidy-cache/clang"
 	"io"
@@ -68,13 +67,11 @@ func runClangTidyCommand(cfg *Configuration, args []string) error {
 	cmd := exec.Command(cfg.ClangTidyPath, args...)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Println("ERR: Can't get StdOut pipe")
 		return err
 	}
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		fmt.Println("ERR: Can't get StdErr pipe")
 		return err
 	}
 
@@ -98,19 +95,15 @@ func runClangTidyCommand(cfg *Configuration, args []string) error {
 func shouldBypassCache(args []string) bool {
 	for _, arg := range args {
 		if arg == "-list-checks" || arg == "--version" {
-			fmt.Println("Probably should bypass that cache")
 			return true
 		}
 	}
 
-	fmt.Println("Lets check that cache")
 	return false
 }
 
 func evaluateTidyCommand(cfg *Configuration, wd string, args []string, cache caches.Cacher) error {
 	bypassCache := shouldBypassCache(args)
-
-	fmt.Println("Bypass cache", bypassCache)
 
 	// fingerprint
 	var fingerPrint []byte = nil
@@ -121,7 +114,6 @@ func evaluateTidyCommand(cfg *Configuration, wd string, args []string, cache cac
 		// evaluate the commands that have been provided
 		other, err := clang.ParseTidyCommand(args)
 		if err != nil {
-			fmt.Println("ERR: Failed to parse tidy args")
 			return err
 		}
 		invocation = other
@@ -129,7 +121,6 @@ func evaluateTidyCommand(cfg *Configuration, wd string, args []string, cache cac
 		// compute the finger print for the file
 		computedFingerPrint, err := caches.ComputeFingerPrint(invocation, wd, args)
 		if err != nil {
-			fmt.Println()
 			return err
 		}
 		fingerPrint = computedFingerPrint
@@ -155,13 +146,6 @@ func evaluateTidyCommand(cfg *Configuration, wd string, args []string, cache cac
 
 	// if the file was clean then we should record this fact into the cache
 	if !bypassCache && fingerPrint != nil && invocation != nil {
-
-		// detect if the command was successful (looking at the exports files
-		//cleanFile, err := clang.IsCleanFile(invocation)
-		//if err != nil {
-		//	return err
-		//}
-
 		err = cache.SaveEntry(fingerPrint, invocation.ExportFile)
 		if err != nil {
 			return err
@@ -174,7 +158,6 @@ func evaluateTidyCommand(cfg *Configuration, wd string, args []string, cache cac
 func main() {
 	cfg, err := loadConfiguration()
 	if err != nil {
-		fmt.Println("ERR: ", err)
 		os.Exit(1)
 	}
 
@@ -184,12 +167,8 @@ func main() {
 	// find the working directory
 	wd, err := os.Getwd()
 	if err != nil {
-		fmt.Println("ERR: ", err)
 		os.Exit(1)
 	}
-
-	// DEBUG
-	fmt.Println("Clang Tidy Cache: ", wd, args)
 
 	// cache creation
 	cache := caches.NewFsCache()
@@ -197,7 +176,6 @@ func main() {
 	// evaluate the clang tidy command
 	err = evaluateTidyCommand(cfg, wd, args, cache)
 	if err != nil {
-		fmt.Println("ERR: ", err)
 		os.Exit(1)
 	}
 }

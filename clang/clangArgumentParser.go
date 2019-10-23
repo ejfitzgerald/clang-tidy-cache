@@ -3,7 +3,6 @@ package clang
 import (
 	"crypto/sha256"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -54,8 +53,6 @@ func ParseClangCommandString(commands string) (*CompilerCommand, error) {
 }
 
 func EvaluatePreprocessedFile(buildRoot string, command *CompilerCommand) ([]byte, error) {
-	fmt.Println("PREPROC BUILD ROOT: ", buildRoot)
-
 	// make the temporary file
 	tmpfile, err := ioutil.TempFile("", "ctc-")
 	if err != nil {
@@ -76,18 +73,13 @@ func EvaluatePreprocessedFile(buildRoot string, command *CompilerCommand) ([]byt
 	args = append(args, command.Arguments...)
 	args = append(args, "-E", "-o", filename, command.InputPath)
 
-	// build up the command to pre-process the
-	fmt.Println("PREPROC: ", command.Compiler)
-	//fmt.Println("PREPROC ARGS: ", strings.Join(args, " "))
-
+	// run the preprocessor
 	cmd := exec.Command(command.Compiler, args...)
 	cmd.Dir = buildRoot
 	err = cmd.Run()
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println("Temp filename: ", filename)
 
 	// read the contents of the file am hash it
 	f, err := os.Open(filename)

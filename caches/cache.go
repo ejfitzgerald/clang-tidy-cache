@@ -2,8 +2,6 @@ package caches
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
-	"fmt"
 	"github.com/ejfitzgerald/clang-tidy-cache/clang"
 	"io"
 	"os"
@@ -38,35 +36,28 @@ func computeDigestForConfigFile(projectRoot string) ([]byte, error) {
 }
 
 func ComputeFingerPrint(invocation *clang.TidyInvocation, wd string, args []string) ([]byte, error) {
-	fmt.Println("WD: ", wd)
 
 	// extract the compilation target command flags from the database
 	targetFlags, err := clang.ExtractCompilationTarget(invocation.DatabaseRoot, invocation.TargetPath)
 	if err != nil {
-		fmt.Println("FINGERPRINT: Failed to extract compilation target")
 		return nil, err
 	}
 
 	// parse the main clang flags
 	compileCommand, err := clang.ParseClangCommandString(targetFlags.Command)
 	if err != nil {
-		fmt.Println("FINGERPRINT: Failed to parse compiler commands")
 		return nil, err
 	}
-
-	fmt.Println("BuildROOT: ", invocation.DatabaseRoot)
 
 	// main part of the fingerprint check generate the preprocessed output file and create a SHA256 of it
 	preProcessedDigest, err := clang.EvaluatePreprocessedFile(targetFlags.Directory, compileCommand)
 	if err != nil {
-		fmt.Println("FINGERPRINT: Failed to evaluate pre-processor output")
 		return nil, err
 	}
 
 	// generate a digest for the full configuration
 	configDigest, err := computeDigestForConfigFile(wd)
 	if err != nil {
-		fmt.Println("FINGERPRINT: Failed to generate digest for configuration file")
 		return nil, err
 	}
 
@@ -75,8 +66,6 @@ func ComputeFingerPrint(invocation *clang.TidyInvocation, wd string, args []stri
 	hasher.Write(preProcessedDigest)
 	hasher.Write(configDigest)
 	fingerPrint := hasher.Sum(nil)
-
-	fmt.Println("Digest: ", hex.EncodeToString(fingerPrint))
 
 	return fingerPrint, nil
 }

@@ -2,7 +2,6 @@ package caches
 
 import (
 	"encoding/hex"
-	"fmt"
 	"io"
 	"os"
 	"os/user"
@@ -15,8 +14,6 @@ type FileSystemCache struct {
 
 func NewFsCache() *FileSystemCache {
 	usr, _ := user.Current()
-
-	fmt.Println("Home DIR", usr.HomeDir)
 	return &FileSystemCache{
 		root: path.Join(usr.HomeDir, ".ctcache", "cache"),
 	}
@@ -26,7 +23,6 @@ func (c *FileSystemCache) FindEntry(digest []byte, outputFile string) (bool, err
 	_, entryPath := defineEntryPath(c.root, digest)
 	_, err := os.Stat(entryPath)
 
-	found := true
 	if err != nil {
 		if os.IsNotExist(err) {
 			return false, nil
@@ -34,8 +30,6 @@ func (c *FileSystemCache) FindEntry(digest []byte, outputFile string) (bool, err
 			return false, err
 		}
 	}
-
-	fmt.Println("FindEntry: ", entryPath, found)
 
 	source, err := os.Open(entryPath)
 	if err != nil {
@@ -79,8 +73,6 @@ func (c *FileSystemCache) SaveEntry(digest []byte, inputFile string) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("SaveEntry: ", entryPath)
 
 	return nil
 }
