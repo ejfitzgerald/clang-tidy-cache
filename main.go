@@ -13,7 +13,7 @@ import (
 	"path"
 )
 
-const VERSION = "0.1.0"
+const VERSION = "0.1.1"
 
 type Configuration struct {
 	ClangTidyPath string `json:"clang_tidy_path"`
