@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/ejfitzgerald/clang-tidy-cache/caches"
 	"github.com/ejfitzgerald/clang-tidy-cache/clang"
 	"io"
@@ -11,6 +12,8 @@ import (
 	"os/user"
 	"path"
 )
+
+const VERSION = "0.1.0"
 
 type Configuration struct {
 	ClangTidyPath string `json:"clang_tidy_path"`
@@ -156,13 +159,19 @@ func evaluateTidyCommand(cfg *Configuration, wd string, args []string, cache cac
 }
 
 func main() {
+	// we are only interested in the arguments for the command
+	args := os.Args[1:]
+
+	// handle version
+	if len(args) == 1 && (args[0] == "version" || args[0] == "-v" || args[0] == "--version") {
+		fmt.Printf("clang-tidy-cache %s\n", VERSION)
+		os.Exit(1)
+	}
+
 	cfg, err := loadConfiguration()
 	if err != nil {
 		os.Exit(1)
 	}
-
-	// we are only interested in the arguments for the command
-	args := os.Args[1:]
 
 	// find the working directory
 	wd, err := os.Getwd()
