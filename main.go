@@ -16,7 +16,8 @@ import (
 const VERSION = "0.1.1"
 
 type Configuration struct {
-	ClangTidyPath string `json:"clang_tidy_path"`
+	ClangTidyPath string                   `json:"clang_tidy_path"`
+	GcsConfig     *caches.GcsConfiguration `json:"gcs,omitempty"`
 }
 
 func loadConfiguration() (*Configuration, error) {
@@ -179,8 +180,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	// cache creation
-	cache := caches.NewFsCache()
+	// attempt to load the Google Cloud cache
+	var cache caches.Cacher
+	if cfg.GcsConfig != nil {
+		candidate, err := caches.NewGcsCache(cfg.GcsConfig)
+		if err == nil {
+			cache = candidate
+		}
+	}
+
+	// if no other cache is configured then default to the FS cache
+	if cache == nil {
+		cache = caches.NewFsCache()
+	}
 
 	// evaluate the clang tidy command
 	err = evaluateTidyCommand(cfg, wd, args, cache)
