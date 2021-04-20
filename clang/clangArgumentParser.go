@@ -69,7 +69,7 @@ func EvaluatePreprocessedFile(buildRoot string, command *CompilerCommand) ([]byt
 	}
 
 	// build up all of the args
-	args := make([]string, 0, len(command.Arguments) + 10)
+	args := make([]string, 0, len(command.Arguments)+10)
 	args = append(args, command.Arguments...)
 	args = append(args, "-E", "-o", filename, command.InputPath)
 
