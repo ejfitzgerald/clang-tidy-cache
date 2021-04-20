@@ -4,7 +4,7 @@ import (
 	"cloud.google.com/go/storage"
 	"context"
 	"encoding/hex"
-	"io"
+	"io/ioutil"
 )
 
 type GcsConfiguration struct {
@@ -52,7 +52,7 @@ func (c *GoogleCloudStorageCache) FindEntry(digest []byte) ([]byte, error) {
 	}
 	defer source.Close()
 
-	return io.ReadAll(source)
+	return ioutil.ReadAll(source)
 }
 
 func (c *GoogleCloudStorageCache) SaveEntry(digest []byte, content []byte) error {

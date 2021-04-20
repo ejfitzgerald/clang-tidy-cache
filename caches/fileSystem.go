@@ -2,7 +2,7 @@ package caches
 
 import (
 	"encoding/hex"
-	"io"
+	"io/ioutil"
 	"os"
 	"os/user"
 	"path"
@@ -37,7 +37,7 @@ func (c *FileSystemCache) FindEntry(digest []byte) ([]byte, error) {
 	}
 	defer source.Close()
 
-	return io.ReadAll(source)
+	return ioutil.ReadAll(source)
 }
 
 func (c *FileSystemCache) SaveEntry(digest []byte, content []byte) error {
