@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/hex"
 	"io"
-	"os"
 )
 
 type GcsConfiguration struct {
@@ -39,45 +38,29 @@ func NewGcsCache(cfg *GcsConfiguration) (*GoogleCloudStorageCache, error) {
 	return cache, nil
 }
 
-func (c *GoogleCloudStorageCache) FindEntry(digest []byte, outputFile string) (bool, error) {
+func (c *GoogleCloudStorageCache) FindEntry(digest []byte) ([]byte, error) {
 	objectName := hex.EncodeToString(digest)
 
 	// attempt to read the entry from the bucket
 	source, err := c.client.Bucket(c.cfg.BucketId).Object(objectName).NewReader(c.ctx)
 	if err != nil {
 		if err == storage.ErrObjectNotExist {
-			return false, nil
+			return nil, nil
 		} else {
-			return false, err
+			return nil, err
 		}
 	}
 	defer source.Close()
 
-	destination, err := os.Create(outputFile)
-	if err != nil {
-		return false, err
-	}
-	defer destination.Close()
-
-	_, err = io.Copy(destination, source)
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
+	return io.ReadAll(source)
 }
 
-func (c *GoogleCloudStorageCache) SaveEntry(digest []byte, inputFile string) error {
+func (c *GoogleCloudStorageCache) SaveEntry(digest []byte, content []byte) error {
 	objectName := hex.EncodeToString(digest)
 
-	f, err := os.Open(inputFile)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
 	wc := c.client.Bucket(c.cfg.BucketId).Object(objectName).NewWriter(c.ctx)
-	if _, err = io.Copy(wc, f); err != nil {
+	_, err := wc.Write(content)
+	if err != nil {
 		return err
 	}
 

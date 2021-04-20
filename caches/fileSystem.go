@@ -19,38 +19,28 @@ func NewFsCache() *FileSystemCache {
 	}
 }
 
-func (c *FileSystemCache) FindEntry(digest []byte, outputFile string) (bool, error) {
+func (c *FileSystemCache) FindEntry(digest []byte) ([]byte, error) {
 	_, entryPath := defineEntryPath(c.root, digest)
 	_, err := os.Stat(entryPath)
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			return false, nil
+			return nil, nil
 		} else {
-			return false, err
+			return nil, err
 		}
 	}
 
 	source, err := os.Open(entryPath)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	defer source.Close()
 
-	destination, err := os.Create(outputFile)
-	if err != nil {
-		return false, err
-	}
-	defer destination.Close()
-	_, err = io.Copy(destination, source)
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
+	return io.ReadAll(source)
 }
 
-func (c *FileSystemCache) SaveEntry(digest []byte, inputFile string) error {
+func (c *FileSystemCache) SaveEntry(digest []byte, content []byte) error {
 	entryRoot, entryPath := defineEntryPath(c.root, digest)
 
 	err := os.MkdirAll(entryRoot, 0755)
@@ -58,18 +48,12 @@ func (c *FileSystemCache) SaveEntry(digest []byte, inputFile string) error {
 		return err
 	}
 
-	source, err := os.Open(inputFile)
-	if err != nil {
-		return err
-	}
-	defer source.Close()
-
 	destination, err := os.Create(entryPath)
 	if err != nil {
 		return err
 	}
 	defer destination.Close()
-	_, err = io.Copy(destination, source)
+	_, err = destination.Write(content)
 	if err != nil {
 		return err
 	}

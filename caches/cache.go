@@ -2,19 +2,38 @@ package caches
 
 import (
 	"crypto/sha256"
+	"fmt"
 	"github.com/ejfitzgerald/clang-tidy-cache/clang"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 )
 
 type Cacher interface {
-	FindEntry(digest []byte, outputFile string) (bool, error)
-	SaveEntry(digest []byte, inputFile string) error
+	// Find contents of cache entry specified by digest.
+	FindEntry(digest []byte) ([]byte, error)
+	// Store contents into a cache entry specified by digest.
+	SaveEntry(digest []byte, content []byte) error
+}
+
+func findInParents(searchDir string, filename string) (string, error) {
+	currentPath := filepath.Join(searchDir, filename)
+	if _, err := os.Stat(currentPath); err == nil {
+		return currentPath, nil
+	}
+	// File does not exists, try any parent directories recursively
+	parentDir := filepath.Dir(searchDir)
+	if parentDir == searchDir {
+		return "", fmt.Errorf("Failed to find %v in %v or any of the parent directories", filename, searchDir)
+	}
+	return findInParents(parentDir, filename)
 }
 
 func computeDigestForConfigFile(projectRoot string) ([]byte, error) {
-	configFilePath := path.Join(projectRoot, ".clang-tidy")
+	configFilePath, err := findInParents(projectRoot, ".clang-tidy")
+	if err != nil {
+		return nil, err
+	}
 
 	// compute the SHA of the configuration file
 	// read the contents of the file am hash it
