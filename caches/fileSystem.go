@@ -12,10 +12,20 @@ type FileSystemCache struct {
 	root string
 }
 
-func NewFsCache() *FileSystemCache {
+// GetFileSystemCachePath gets the path to the directory to use for storing the
+// cache. It defaults to ~/.ctcache/cache and can be overridden by setting
+// CLANG_TIDY_CACHE_DIR environment variable.
+func GetFileSystemCachePath() string {
+	if envPath := os.Getenv("CLANG_TIDY_CACHE_DIR"); len(envPath) > 0 {
+		return envPath
+	}
 	usr, _ := user.Current()
+	return path.Join(usr.HomeDir, ".ctcache", "cache")
+}
+
+func NewFsCache() *FileSystemCache {
 	return &FileSystemCache{
-		root: path.Join(usr.HomeDir, ".ctcache", "cache"),
+		root: GetFileSystemCachePath(),
 	}
 }
 
