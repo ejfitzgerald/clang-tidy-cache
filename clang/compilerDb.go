@@ -3,9 +3,9 @@ package clang
 import (
 	"encoding/json"
 	"errors"
+	"github.com/ejfitzgerald/clang-tidy-cache/utils"
 	"io/ioutil"
 	"os"
-	"path"
 )
 
 type DatabaseEntry struct {
@@ -17,14 +17,9 @@ type DatabaseEntry struct {
 type Database = []DatabaseEntry
 
 func ExtractCompilationTarget(databaseRootPath string, target string) (*DatabaseEntry, error) {
-	compilationDbPath := path.Join(databaseRootPath, "compile_commands.json")
-	info, err := os.Stat(compilationDbPath)
+	compilationDbPath, err := utils.FindInParents(databaseRootPath, "compile_commands.json")
 	if err != nil {
 		return nil, err
-	}
-
-	if info.IsDir() {
-		return nil, errors.New("Unable to located valid database file")
 	}
 
 	jsonFile, err := os.Open(compilationDbPath)
