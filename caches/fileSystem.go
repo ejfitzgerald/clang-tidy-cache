@@ -2,7 +2,7 @@ package caches
 
 import (
 	"encoding/hex"
-	"io"
+	"io/ioutil"
 	"os"
 	"os/user"
 	"path"
@@ -12,45 +12,45 @@ type FileSystemCache struct {
 	root string
 }
 
-func NewFsCache() *FileSystemCache {
+// GetFileSystemCachePath gets the path to the directory to use for storing the
+// cache. It defaults to ~/.ctcache/cache and can be overridden by setting
+// CLANG_TIDY_CACHE_DIR environment variable.
+func GetFileSystemCachePath() string {
+	if envPath := os.Getenv("CLANG_TIDY_CACHE_DIR"); len(envPath) > 0 {
+		return envPath
+	}
 	usr, _ := user.Current()
+	return path.Join(usr.HomeDir, ".ctcache", "cache")
+}
+
+func NewFsCache() *FileSystemCache {
 	return &FileSystemCache{
-		root: path.Join(usr.HomeDir, ".ctcache", "cache"),
+		root: GetFileSystemCachePath(),
 	}
 }
 
-func (c *FileSystemCache) FindEntry(digest []byte, outputFile string) (bool, error) {
+func (c *FileSystemCache) FindEntry(digest []byte) ([]byte, error) {
 	_, entryPath := defineEntryPath(c.root, digest)
 	_, err := os.Stat(entryPath)
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			return false, nil
+			return nil, nil
 		} else {
-			return false, err
+			return nil, err
 		}
 	}
 
 	source, err := os.Open(entryPath)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	defer source.Close()
 
-	destination, err := os.Create(outputFile)
-	if err != nil {
-		return false, err
-	}
-	defer destination.Close()
-	_, err = io.Copy(destination, source)
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
+	return ioutil.ReadAll(source)
 }
 
-func (c *FileSystemCache) SaveEntry(digest []byte, inputFile string) error {
+func (c *FileSystemCache) SaveEntry(digest []byte, content []byte) error {
 	entryRoot, entryPath := defineEntryPath(c.root, digest)
 
 	err := os.MkdirAll(entryRoot, 0755)
@@ -58,18 +58,12 @@ func (c *FileSystemCache) SaveEntry(digest []byte, inputFile string) error {
 		return err
 	}
 
-	source, err := os.Open(inputFile)
-	if err != nil {
-		return err
-	}
-	defer source.Close()
-
 	destination, err := os.Create(entryPath)
 	if err != nil {
 		return err
 	}
 	defer destination.Close()
-	_, err = io.Copy(destination, source)
+	_, err = destination.Write(content)
 	if err != nil {
 		return err
 	}

@@ -130,14 +130,22 @@ func evaluateTidyCommand(cfg *Configuration, wd string, args []string, cache cac
 		fingerPrint = computedFingerPrint
 
 		// evaluate if this function is has already been completed
-		cacheHit, err := cache.FindEntry(fingerPrint, invocation.ExportFile)
+		cacheContent, err := cache.FindEntry(fingerPrint)
 		if err != nil {
 			return err
+		}
+		if invocation.ExportFile != nil {
+			f, err := os.Create(*invocation.ExportFile)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			f.Write(cacheContent)
 		}
 
 		// this is "hopefully" the general case where we get a cache hit and this means that we need to do nothing
 		// further
-		if cacheHit {
+		if cacheContent != nil {
 			return nil
 		}
 	}
@@ -150,7 +158,14 @@ func evaluateTidyCommand(cfg *Configuration, wd string, args []string, cache cac
 
 	// if the file was clean then we should record this fact into the cache
 	if !bypassCache && fingerPrint != nil && invocation != nil {
-		err = cache.SaveEntry(fingerPrint, invocation.ExportFile)
+		content := []byte{}
+		if invocation.ExportFile != nil {
+			content, err = ioutil.ReadFile(*invocation.ExportFile)
+			if err != nil {
+				return err
+			}
+		}
+		err = cache.SaveEntry(fingerPrint, content)
 		if err != nil {
 			return err
 		}
@@ -171,6 +186,7 @@ func main() {
 
 	cfg, err := loadConfiguration()
 	if err != nil {
+		fmt.Printf("Failed to load configuration: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -197,6 +213,7 @@ func main() {
 	// evaluate the clang tidy command
 	err = evaluateTidyCommand(cfg, wd, args, cache)
 	if err != nil {
+		fmt.Printf("Failed to get commands: %v\n", err)
 		os.Exit(1)
 	}
 }

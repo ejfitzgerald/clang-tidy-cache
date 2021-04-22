@@ -3,18 +3,23 @@ package caches
 import (
 	"crypto/sha256"
 	"github.com/ejfitzgerald/clang-tidy-cache/clang"
+	"github.com/ejfitzgerald/clang-tidy-cache/utils"
 	"io"
 	"os"
-	"path"
 )
 
 type Cacher interface {
-	FindEntry(digest []byte, outputFile string) (bool, error)
-	SaveEntry(digest []byte, inputFile string) error
+	// Find contents of cache entry specified by digest.
+	FindEntry(digest []byte) ([]byte, error)
+	// Store contents into a cache entry specified by digest.
+	SaveEntry(digest []byte, content []byte) error
 }
 
 func computeDigestForConfigFile(projectRoot string) ([]byte, error) {
-	configFilePath := path.Join(projectRoot, ".clang-tidy")
+	configFilePath, err := utils.FindInParents(projectRoot, ".clang-tidy")
+	if err != nil {
+		return nil, err
+	}
 
 	// compute the SHA of the configuration file
 	// read the contents of the file am hash it

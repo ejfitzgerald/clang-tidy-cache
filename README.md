@@ -16,6 +16,10 @@ The configuration file contains the information about where `clang-tidy-cache` c
 }
 ```
 
+By default, the cache is stored in a filesystem under `~/.ctcache/cache`. This can be changed by setting `CLANG_TIDY_CACHE_DIR` environment variable.
+
+For easy integration in your CI system, set `CLANG_TIDY_CACHE_DIR` to a directory that you can share across your pipelines.
+
 ## Installing
 
 To get the latest version checkout the releases page on github:
