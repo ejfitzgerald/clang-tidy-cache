@@ -152,7 +152,7 @@ func evaluateTidyCommand(cfg *Configuration, wd string, args []string, cache cac
 		invocation = other
 
 		// compute the finger print for the file
-		computedFingerPrint, err := caches.ComputeFingerPrint(invocation, wd, args)
+		computedFingerPrint, err := caches.ComputeFingerPrint(cfg.ClangTidyPath, invocation, wd, args)
 		if err != nil {
 			return err
 		}
