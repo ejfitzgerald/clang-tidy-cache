@@ -4,7 +4,7 @@ A fairly simple wrapper application around the clang-tidy executable. It will at
 
 ## Configuration
 
-In order to keep the wrapper reasonably clean, the user will have to write a configuration file at the following location:
+By default, the wrapper will look for the `clang-tidy` executable on the path. This can be changed by setting the `CLANG_TIDY_CACHE_BINARY` environment variable, or by writing a configuration file at the following location:
 
 `~/.ctcache/config.json`
 

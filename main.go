@@ -20,19 +20,24 @@ type Configuration struct {
 	GcsConfig     *caches.GcsConfiguration `json:"gcs,omitempty"`
 }
 
-func loadConfiguration() (*Configuration, error) {
+func readConfigFile(cfg *Configuration) error {
 	usr, err := user.Current()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// define the configuration path
 	configPath := path.Join(usr.HomeDir, ".ctcache", "config.json")
 
+	// missing config file is fine: we simply use the defaults or env vars
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return nil
+	}
+
 	// open the configuration file
 	jsonFile, err := os.Open(configPath)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// defer the closing of our jsonFile so that we can parse it later on
@@ -40,12 +45,36 @@ func loadConfiguration() (*Configuration, error) {
 
 	// read the contents
 	bytes, err := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		return err
+	}
 
-	var cfg Configuration
-	err = json.Unmarshal(bytes, &cfg)
+	err = json.Unmarshal(bytes, cfg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func readConfigEnv(cfg *Configuration) {
+	if envPath := os.Getenv("CLANG_TIDY_CACHE_BINARY"); len(envPath) > 0 {
+		cfg.ClangTidyPath = envPath
+	}
+}
+
+func loadConfiguration() (*Configuration, error) {
+	// lowest priority: built-in defaults
+	cfg := Configuration{ClangTidyPath: "clang-tidy"}
+
+	// higher priority: config file
+	err := readConfigFile(&cfg)
 	if err != nil {
 		return nil, err
 	}
+
+	// highest priority: environment variables
+	readConfigEnv(&cfg)
 
 	return &cfg, nil
 }
