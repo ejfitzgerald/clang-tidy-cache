@@ -53,7 +53,8 @@ func computeDigestForClangTidyBinary(clangTidyPath string) ([]byte, error) {
 	return computeFileDigest(path)
 }
 
-func ComputeFingerPrint(clangTidyPath string, invocation *clang.TidyInvocation, wd string, args []string) ([]byte, error) {
+func ComputeFingerPrint(clangTidyPath string, baseDir string, invocation *clang.TidyInvocation,
+	wd string, args []string) ([]byte, error) {
 
 	// extract the compilation target command flags from the database
 	targetFlags, err := clang.ExtractCompilationTarget(invocation.DatabaseRoot, invocation.TargetPath)
@@ -68,7 +69,7 @@ func ComputeFingerPrint(clangTidyPath string, invocation *clang.TidyInvocation, 
 	}
 
 	// main part of the fingerprint check generate the preprocessed output file and create a SHA256 of it
-	preProcessedDigest, err := clang.EvaluatePreprocessedFile(targetFlags.Directory, compileCommand)
+	preProcessedDigest, err := clang.EvaluatePreprocessedFile(targetFlags.Directory, baseDir, compileCommand)
 	if err != nil {
 		return nil, err
 	}
