@@ -6,6 +6,7 @@ import (
 	"github.com/ejfitzgerald/clang-tidy-cache/utils"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 type DatabaseEntry struct {
@@ -39,7 +40,7 @@ func ExtractCompilationTarget(databaseRootPath string, target string) (*Database
 	}
 
 	for _, entry := range db {
-		if entry.File == target {
+		if entry.File == target || entry.File == filepath.Join(entry.Directory, target) {
 			return &entry, nil
 		}
 	}
