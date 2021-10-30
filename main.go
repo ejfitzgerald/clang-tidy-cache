@@ -79,14 +79,14 @@ func runClangTidyCommand(cfg *Configuration, args []string) error {
 		return err
 	}
 
+	// stream out the output of the command
+	go streamOutput(os.Stdout, stdout)
+	go streamOutput(os.Stderr, stderr)
+
 	err = cmd.Start()
 	if err != nil {
 		return err
 	}
-
-	// stream out the output of the command
-	go streamOutput(os.Stdout, stdout)
-	go streamOutput(os.Stderr, stderr)
 
 	err = cmd.Wait()
 	if err != nil {
