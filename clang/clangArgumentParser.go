@@ -1,6 +1,7 @@
 package clang
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"errors"
 	"io"
@@ -52,7 +53,7 @@ func ParseClangCommandString(commands string) (*CompilerCommand, error) {
 	return &cmd, nil
 }
 
-func EvaluatePreprocessedFile(buildRoot string, command *CompilerCommand) ([]byte, error) {
+func EvaluatePreprocessedFile(buildRoot string, baseDir string, command *CompilerCommand) ([]byte, error) {
 	// make the temporary file
 	tmpfile, err := ioutil.TempFile("", "ctc-")
 	if err != nil {
@@ -71,7 +72,8 @@ func EvaluatePreprocessedFile(buildRoot string, command *CompilerCommand) ([]byt
 	// build up all of the args
 	args := make([]string, 0, len(command.Arguments)+10)
 	args = append(args, command.Arguments...)
-	args = append(args, "-E", "-o", filename, command.InputPath)
+	// the -P flag drops linemarkers which contain absolute paths to headers
+	args = append(args, "-E", "-P", "-o", filename, command.InputPath)
 
 	// run the preprocessor
 	cmd := exec.Command(command.Compiler, args...)
@@ -82,15 +84,23 @@ func EvaluatePreprocessedFile(buildRoot string, command *CompilerCommand) ([]byt
 	}
 
 	// read the contents of the file am hash it
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
 	hasher := sha256.New()
-	if _, err := io.Copy(hasher, f); err != nil {
-		return nil, err
+	if len(baseDir) == 0 {
+		f, err := os.Open(filename)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		if _, err := io.Copy(hasher, f); err != nil {
+			return nil, err
+		}
+	} else {
+		data, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return nil, err
+		}
+		hasher.Write(bytes.ReplaceAll(data, []byte(baseDir), []byte(".")))
 	}
 
 	// compute the final digest

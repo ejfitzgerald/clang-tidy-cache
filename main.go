@@ -11,12 +11,14 @@ import (
 	"os/exec"
 	"os/user"
 	"path"
+	"path/filepath"
 )
 
 const VERSION = "0.3.0"
 
 type Configuration struct {
 	ClangTidyPath string                   `json:"clang_tidy_path"`
+	BaseDir       string                   `json:"base_dir"`
 	GcsConfig     *caches.GcsConfiguration `json:"gcs,omitempty"`
 }
 
@@ -60,6 +62,9 @@ func readConfigFile(cfg *Configuration) error {
 func readConfigEnv(cfg *Configuration) {
 	if envPath := os.Getenv("CLANG_TIDY_CACHE_BINARY"); len(envPath) > 0 {
 		cfg.ClangTidyPath = envPath
+	}
+	if envBaseDir := os.Getenv("CLANG_TIDY_CACHE_BASEDIR"); len(envBaseDir) > 0 {
+		cfg.BaseDir = filepath.Clean(envBaseDir)
 	}
 }
 
@@ -152,7 +157,7 @@ func evaluateTidyCommand(cfg *Configuration, wd string, args []string, cache cac
 		invocation = other
 
 		// compute the finger print for the file
-		computedFingerPrint, err := caches.ComputeFingerPrint(cfg.ClangTidyPath, invocation, wd, args)
+		computedFingerPrint, err := caches.ComputeFingerPrint(cfg.ClangTidyPath, cfg.BaseDir, invocation, wd, args)
 		if err != nil {
 			return err
 		}
