@@ -3,12 +3,12 @@ package clang
 import (
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
-	"fmt"
 )
 
 type CompilerCommand struct {
@@ -79,7 +79,7 @@ func EvaluatePreprocessedFile(buildRoot string, command *CompilerCommand) ([]byt
 	cmd.Dir = buildRoot
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Printf(stdoutStderr)
+		fmt.Printf("%s", stdoutStderr)
 		return nil, err
 	}
 
