@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"fmt"
 )
 
 type CompilerCommand struct {
@@ -76,8 +77,9 @@ func EvaluatePreprocessedFile(buildRoot string, command *CompilerCommand) ([]byt
 	// run the preprocessor
 	cmd := exec.Command(command.Compiler, args...)
 	cmd.Dir = buildRoot
-	err = cmd.Run()
+	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
+		fmt.Printf(stdoutStderr)
 		return nil, err
 	}
 
