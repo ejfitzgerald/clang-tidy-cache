@@ -97,6 +97,7 @@ func EvaluatePreprocessedFile(buildRoot string, command *CompilerCommand) ([]byt
 	digest := hasher.Sum(nil)
 
 	// remove the file (clean up)
+	f.Close()
 	err = os.Remove(filename)
 	if err != nil {
 		return nil, err
