@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // FindInParents searches for a file named filename in searchDir or any of it's
@@ -21,4 +22,14 @@ func FindInParents(searchDir string, filename string) (string, error) {
 		return "", fmt.Errorf("Failed to find %v in %v or any of the parent directories", filename, searchDir)
 	}
 	return FindInParents(parentDir, filename)
+}
+
+// Converts given path to Posix (replacing \ with /)
+//
+// @param {string} givenPath Path to convert
+//
+// @returns {string} Converted filepath
+//
+func PosixifyPath(givenPath string) string {
+	return strings.ReplaceAll(givenPath, "\\", "/")
 }
