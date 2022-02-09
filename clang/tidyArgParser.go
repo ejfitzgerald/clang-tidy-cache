@@ -42,7 +42,7 @@ func ParseTidyCommand(args []string) (*TidyInvocation, error) {
 	for i := 0; i < len(args); {
 		if pos, val := ExtractOption(args, i, []string{"-export-fixes", "--export-fixes"}, []string{"--export-fixes="}); pos > i {
 			i = pos
-			*invocation.ExportFile = *val
+			invocation.ExportFile = val
 			continue
 		}
 
