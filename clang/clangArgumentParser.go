@@ -34,8 +34,15 @@ func ParseClangCommandString(commands string) (*CompilerCommand, error) {
 			continue
 		}
 
-		if words[i] == "-o" && (i+1) < len(words) {
+		if (words[i] == "-o" || words[i] == "/Fo") && (i+1) < len(words) {
 			cmd.OutputPath = words[i+1]
+			i += 2
+			continue
+		}
+
+		// For clang-cl, check if word starts with /Fo, if so, strip it
+		if strings.HasPrefix(words[i], "/Fo") {
+			cmd.OutputPath = words[i][3:]
 			i += 2
 			continue
 		}
