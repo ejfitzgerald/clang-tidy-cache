@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/ejfitzgerald/clang-tidy-cache/utils"
 )
@@ -44,9 +45,11 @@ func ExtractCompilationTarget(databaseRootPath string, target string) (*Database
 	}
 
 	for _, entry := range db {
-		entry.File = utils.PosixifyPath(entry.File)
-		entry.Directory = utils.PosixifyPath(entry.Directory)
-		target = utils.PosixifyPath(target)
+		if runtime.GOOS == "windows" {
+			entry.File = utils.PosixifyPath(entry.File)
+			entry.Directory = utils.PosixifyPath(entry.Directory)
+			target = utils.PosixifyPath(target)
+		}
 
 		if entry.File == target || entry.File == filepath.Join(entry.Directory, target) {
 			return &entry, nil
