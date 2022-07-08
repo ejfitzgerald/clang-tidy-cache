@@ -79,7 +79,7 @@ func loadConfiguration() (*Configuration, error) {
 	return &cfg, nil
 }
 
-func streamOutput(file *os.File, closer io.ReadCloser) {
+func streamOutput(file *os.File, closer io.ReadCloser, result *[]byte) {
 	defer closer.Close()
 
 	buffer := make([]byte, 1024)
@@ -93,36 +93,40 @@ func streamOutput(file *os.File, closer io.ReadCloser) {
 		if err != nil {
 			break
 		}
+		*result = append(*result, buffer[:n]...)
 	}
 }
 
-func runClangTidyCommand(cfg *Configuration, args []string) error {
+func runClangTidyCommand(cfg *Configuration, args []string) ([]byte, []byte, error) {
 	cmd := exec.Command(cfg.ClangTidyPath, args...)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
+	stdout_buffer := []byte{}
+	stderr_buffer := []byte{}
+
 	// stream out the output of the command
-	go streamOutput(os.Stdout, stdout)
-	go streamOutput(os.Stderr, stderr)
+	go streamOutput(os.Stdout, stdout, &stdout_buffer)
+	go streamOutput(os.Stderr, stderr, &stderr_buffer)
 
 	err = cmd.Start()
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	err = cmd.Wait()
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
-	return nil
+	return stdout_buffer, stderr_buffer, nil
 }
 
 func shouldBypassCache(args []string) bool {
@@ -180,7 +184,7 @@ func evaluateTidyCommand(cfg *Configuration, wd string, args []string, cache cac
 	}
 
 	// we need to run the command
-	err := runClangTidyCommand(cfg, args)
+	stdout, _, err := runClangTidyCommand(cfg, args)
 	if err != nil {
 		return err
 	}
@@ -193,6 +197,8 @@ func evaluateTidyCommand(cfg *Configuration, wd string, args []string, cache cac
 			if err != nil {
 				return err
 			}
+		} else {
+			content = stdout
 		}
 		err = cache.SaveEntry(fingerPrint, content)
 		if err != nil {
