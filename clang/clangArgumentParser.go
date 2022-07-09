@@ -3,11 +3,11 @@ package clang
 import (
 	"crypto/sha256"
 	"errors"
+	"github.com/google/shlex"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 type CompilerCommand struct {
@@ -18,7 +18,10 @@ type CompilerCommand struct {
 }
 
 func ParseClangCommandString(commands string) (*CompilerCommand, error) {
-	words := strings.Fields(commands)
+	words, err := shlex.Split(commands)
+	if err != nil {
+		return nil, err
+	}
 
 	var cmd CompilerCommand
 	cmd.Compiler = words[0]
