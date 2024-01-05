@@ -2,11 +2,12 @@ package caches
 
 import (
 	"crypto/sha256"
-	"github.com/ejfitzgerald/clang-tidy-cache/clang"
-	"github.com/ejfitzgerald/clang-tidy-cache/utils"
 	"io"
 	"os"
 	"os/exec"
+
+	"github.com/ejfitzgerald/clang-tidy-cache/clang"
+	"github.com/ejfitzgerald/clang-tidy-cache/utils"
 )
 
 type Cacher interface {
@@ -62,7 +63,7 @@ func ComputeFingerPrint(clangTidyPath string, invocation *clang.TidyInvocation, 
 	}
 
 	// parse the main clang flags
-	compileCommand, err := clang.ParseClangCommandString(targetFlags.Command)
+	compileCommand, err := clang.ParseClangCommandString(targetFlags)
 	if err != nil {
 		return nil, err
 	}
