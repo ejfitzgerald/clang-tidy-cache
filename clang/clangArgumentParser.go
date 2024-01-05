@@ -7,7 +7,8 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
+
+	"github.com/google/shlex"
 )
 
 type CompilerCommand struct {
@@ -17,8 +18,19 @@ type CompilerCommand struct {
 	InputPath  string
 }
 
-func ParseClangCommandString(commands string) (*CompilerCommand, error) {
-	words := strings.Fields(commands)
+func ParseClangCommandString(entry *DatabaseEntry) (*CompilerCommand, error) {
+	var words []string
+	if len(entry.Command) != 0 {
+		// if command given, split it
+		splitCommands, err := shlex.Split(entry.Command)
+		if err != nil {
+			return nil, err
+		}
+		words = splitCommands
+	} else {
+		// use the arguments
+		words = entry.Arguments
+	}
 
 	var cmd CompilerCommand
 	cmd.Compiler = words[0]

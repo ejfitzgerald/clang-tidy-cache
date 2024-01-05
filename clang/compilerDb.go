@@ -10,9 +10,10 @@ import (
 )
 
 type DatabaseEntry struct {
-	Directory string `json:"directory"`
-	Command   string `json:"command"`
-	File      string `json:"file"`
+	Directory string   `json:"directory"`
+	Command   string   `json:"command"`
+	Arguments []string `json:"arguments"`
+	File      string   `json:"file"`
 }
 
 type Database = []DatabaseEntry
