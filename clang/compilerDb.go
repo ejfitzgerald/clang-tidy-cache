@@ -2,11 +2,10 @@ package clang
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 
 	"github.com/ejfitzgerald/clang-tidy-cache/utils"
 )
@@ -44,17 +43,16 @@ func ExtractCompilationTarget(databaseRootPath string, target string) (*Database
 		return nil, err
 	}
 
+	// Find the entry that matches the target
 	for _, entry := range db {
-		if runtime.GOOS == "windows" {
-			entry.File = utils.PosixifyPath(entry.File)
-			entry.Directory = utils.PosixifyPath(entry.Directory)
-			target = utils.PosixifyPath(target)
-		}
+		entry.File = utils.NormalizePath(entry.File)
+		entry.Directory = utils.NormalizePath(entry.Directory)
+		target = utils.NormalizePath(target)
 
 		if entry.File == target || entry.File == filepath.Join(entry.Directory, target) {
 			return &entry, nil
 		}
 	}
 
-	return nil, errors.New("Unable to locate the compiler definition")
+	return nil, fmt.Errorf("unable to find the compiler definition for target %v", target)
 }

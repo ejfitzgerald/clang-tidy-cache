@@ -29,7 +29,26 @@ func FindInParents(searchDir string, filename string) (string, error) {
 // @param {string} givenPath Path to convert
 //
 // @returns {string} Converted filepath
-//
 func PosixifyPath(givenPath string) string {
 	return strings.ReplaceAll(givenPath, "\\", "/")
+}
+
+// NormalizePath normalizes the given path between Windows and POSIX
+// and removes the leading "./" if present
+//
+//	@param {string} path Path to normalize
+//
+//	@returns {string} Normalized path
+func NormalizePath(path string) string {
+	var normalizedPath string
+
+	// Normalize the path to use POSIX separators
+	normalizedPath = PosixifyPath(path)
+
+	// Remove the leading "./" if present
+	if normalizedPath[0:2] == "./" {
+		normalizedPath = normalizedPath[2:]
+	}
+
+	return normalizedPath
 }

@@ -3,14 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ejfitzgerald/clang-tidy-cache/caches"
-	"github.com/ejfitzgerald/clang-tidy-cache/clang"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
 	"path"
+
+	"github.com/ejfitzgerald/clang-tidy-cache/caches"
+	"github.com/ejfitzgerald/clang-tidy-cache/clang"
 )
 
 const VERSION = "0.3.0"
