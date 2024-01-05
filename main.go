@@ -164,6 +164,12 @@ func evaluateTidyCommand(cfg *Configuration, wd string, args []string, cache cac
 			return err
 		}
 		if invocation.ExportFile != nil {
+			// create the directory if it does not exist
+			err = os.MkdirAll(path.Dir(*invocation.ExportFile), 0755)
+			if err != nil {
+				return err
+			}
+
 			f, err := os.Create(*invocation.ExportFile)
 			if err != nil {
 				return err
